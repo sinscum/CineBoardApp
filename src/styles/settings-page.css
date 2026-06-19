@@ -1,0 +1,125 @@
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 100%;
+  padding-bottom: 32px;
+}
+
+.settings-heading h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: #f5f7fa;
+}
+
+.settings-subtitle {
+  margin-top: 6px;
+  color: #9fb0bf;
+  font-size: 0.95rem;
+}
+
+.settings-status {
+  margin-top: 0;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.settings-panel {
+  background: #0b1721;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.settings-panel-title {
+  margin: 0 0 14px;
+  font-size: 1.05rem;
+  color: #f5f7fa;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.settings-field-label {
+  font-size: 0.88rem;
+  color: #9fb0bf;
+}
+
+.settings-field input,
+.settings-field select {
+  background: #0c1a24;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f5f7fa;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.settings-field input[type="range"] {
+  width: 100%;
+  cursor: pointer;
+  padding: 0;
+  background: transparent;
+}
+
+.settings-field input[type="file"] {
+  padding: 8px 10px;
+}
+
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.settings-button {
+  background: #0c1a24;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f5f7fa;
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.settings-button:hover {
+  background: #10202c;
+}
+
+.font-preview-card {
+  background: #08131d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.font-preview-top {
+  color: #f5c14b;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+}
+
+.font-preview-title {
+  color: #ffffff;
+  line-height: 1;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.font-preview-bottom {
+  color: #d7e0e8;
+  line-height: 1.3;
+}

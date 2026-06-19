@@ -1,0 +1,30 @@
+:root {
+  /* Core palette */
+  --page-bg: linear-gradient(180deg, #080c13 0%, #0b111a 100%);
+  --app-bg: #061018;
+  --surface: #0b1721;
+  --surface-01: #0c1a24;
+  --surface-02: #08131d;
+  --input-bg: #0c1a24;
+
+  /* Text */
+  --text: #f5f7fa;
+  --muted: #9fb0bf;
+  --muted-2: #b7c0da;
+
+  /* Accent */
+  --accent: #f5c14b;
+  --accent-weak: rgba(245, 193, 75, 0.12);
+
+  /* Borders & shadows */
+  --border-weak: rgba(255, 255, 255, 0.08);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.18);
+
+  /* Spacing & radius */
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+}

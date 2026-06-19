@@ -1,0 +1,287 @@
+@import url("https://fonts.googleapis.com/css2?family=Anton&family=Audiowide&family=Bebas+Neue&family=Cinzel:wght@400;600;700&family=Creepster&family=Exo+2:wght@400;600&family=Frijole&family=IM+Fell+English+SC&family=MedievalSharp&family=Michroma&family=Montserrat:wght@400;600;700&family=Orbitron:wght@400;600;700&family=Oswald:wght@400;600;700&family=Rajdhani:wght@400;600;700&family=Uncial+Antiqua&display=swap");
+
+.display-page {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+  color: #f5f7fa;
+}
+
+.display-background {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(24px) brightness(0.42);
+  transform: scale(1.08);
+  opacity: 0.92;
+}
+
+.display-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.display-content {
+  --top-banner-height: 90px;
+  --bottom-banner-height: 110px;
+  --top-font: "Oswald", sans-serif;
+  --bottom-font: "Montserrat", sans-serif;
+  --title-font: "Bebas Neue", sans-serif;
+  --side-text-size: 22px;
+  --title-text-size: 40px;
+
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-rows: var(--top-banner-height) 1fr var(--bottom-banner-height);
+}
+
+.display-banner {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1fr;
+  align-items: center;
+  gap: 18px;
+  padding: 0 26px;
+  background: rgba(0, 0, 0, 0.72);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  backdrop-filter: blur(8px);
+  overflow: hidden;
+}
+
+.display-banner.has-banner-image {
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.display-banner.banner-none {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.display-banner-top {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.display-banner-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.display-banner-zone,
+.display-banner-zone-left,
+.display-banner-zone-center,
+.display-banner-zone-right,
+.display-top-text,
+.display-bottom-side-text,
+.display-movie-title {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.display-banner-zone {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.display-banner-zone-left {
+  justify-content: flex-start;
+}
+
+.display-banner-zone-center {
+  justify-content: center;
+  text-align: center;
+}
+
+.display-banner-zone-right {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.top-zone {
+  font-family: var(--top-font);
+  font-size: var(--side-text-size);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.bottom-zone {
+  font-family: var(--bottom-font);
+}
+
+.display-top-text,
+.display-bottom-side-text,
+.display-movie-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+  padding: 0 !important;
+}
+
+.display-top-text {
+  color: #f5f7fa;
+}
+
+.display-top-text-center {
+  color: #f5c14b;
+  font-weight: 700;
+}
+
+.display-bottom-side-text {
+  font-size: var(--side-text-size);
+  color: #ffffff;
+}
+
+.display-bottom-side-text-right {
+  color: #d7e0e8;
+}
+
+.display-movie-title {
+  font-family: var(--title-font);
+  font-size: var(--title-text-size);
+  line-height: 1;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.display-stage {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.display-poster {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.display-poster-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.display-poster-image.fit-contain { object-fit: contain; }
+.display-poster-image.fit-cover { object-fit: cover; }
+.display-poster-image.fit-stretch { object-fit: fill; }
+
+.display-no-poster,
+.display-loading,
+.display-error {
+  color: #ffffff;
+}
+
+.display-loading,
+.display-error {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  text-align: center;
+  padding: 32px;
+}
+
+.banner-theme-default-top,
+.banner-theme-default-bottom {
+  background: linear-gradient(90deg, rgba(20, 26, 34, 0.88), rgba(10, 14, 20, 0.88));
+}
+
+.banner-theme-popular-top,
+.banner-theme-popular-bottom {
+  background: linear-gradient(90deg, rgba(110, 80, 18, 0.88), rgba(35, 24, 6, 0.88));
+}
+
+.banner-theme-now-playing-top,
+.banner-theme-now-playing-bottom {
+  background: linear-gradient(90deg, rgba(120, 20, 20, 0.88), rgba(35, 6, 6, 0.88));
+}
+
+.banner-theme-upcoming-top,
+.banner-theme-upcoming-bottom {
+  background: linear-gradient(90deg, rgba(20, 60, 130, 0.88), rgba(8, 20, 48, 0.88));
+}
+
+.banner-theme-top-rated-top,
+.banner-theme-top-rated-bottom {
+  background: linear-gradient(90deg, rgba(85, 30, 120, 0.88), rgba(22, 8, 35, 0.88));
+}
+
+.banner-theme-horror-top,
+.banner-theme-horror-bottom {
+  background: linear-gradient(90deg, rgba(90, 0, 0, 0.9), rgba(12, 0, 0, 0.9));
+}
+
+.banner-theme-scifi-top,
+.banner-theme-scifi-bottom {
+  background: linear-gradient(90deg, rgba(0, 90, 110, 0.9), rgba(0, 20, 28, 0.9));
+}
+
+.banner-theme-comedy-top,
+.banner-theme-comedy-bottom {
+  background: linear-gradient(90deg, rgba(180, 120, 20, 0.88), rgba(60, 36, 8, 0.88));
+}
+
+.banner-theme-fantasy-top,
+.banner-theme-fantasy-bottom {
+  background: linear-gradient(90deg, rgba(82, 56, 18, 0.9), rgba(32, 20, 6, 0.9));
+}
+
+/* Ensure poster fills the stage area regardless of source */
+.display-stage {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.display-poster {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.display-poster img,
+.display-poster-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.display-poster-image.fit-contain,
+.display-poster img.fit-contain {
+  object-fit: contain;
+}
+
+.display-poster-image.fit-cover,
+.display-poster img.fit-cover {
+  object-fit: cover;
+}
+
+.display-poster-image.fit-stretch,
+.display-poster img.fit-stretch {
+  object-fit: fill;
+}

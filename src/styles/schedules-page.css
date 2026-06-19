@@ -1,0 +1,85 @@
+.schedules-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.schedules-heading h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: #f5f7fa;
+}
+
+.schedules-subtitle {
+  margin-top: 6px;
+  color: #9fb0bf;
+  font-size: 0.95rem;
+}
+
+.schedules-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  background: #0b1721;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.schedules-search input,
+.schedules-filter select,
+.schedules-add button,
+.schedules-detail-actions button {
+  background: #0c1a24;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f5f7fa;
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.schedules-search input {
+  min-width: 260px;
+}
+
+.schedules-add button,
+.schedules-detail-actions button {
+  cursor: pointer;
+}
+
+.schedules-list {
+  display: grid;
+  gap: 16px;
+}
+
+.schedule-card,
+.schedules-detail-panel {
+  background: #0b1721;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.schedule-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.schedule-card-title {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #f5f7fa;
+}
+
+.schedule-card-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #f5c14b;
+  background: rgba(245, 193, 75, 0.14);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+

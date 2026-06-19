@@ -1,0 +1,217 @@
+.displays-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.displays-heading h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: #f5f7fa;
+}
+
+.displays-subtitle {
+  margin-top: 6px;
+  color: #9fb0bf;
+  font-size: 0.95rem;
+}
+
+.displays-status {
+  background: rgba(245, 193, 75, 0.1);
+  border: 1px solid rgba(245, 193, 75, 0.35);
+  border-radius: 12px;
+  padding: 12px 18px;
+  color: #f5c14b;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.displays-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+}
+
+.display-card {
+  background: #0b1721;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.display-card-active {
+  border-color: #f5c14b;
+  box-shadow: 0 0 0 2px rgba(245, 193, 75, 0.35),
+    0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.display-card-disabled {
+  opacity: 0.65;
+}
+
+.display-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.display-card-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.display-card-title {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #f5f7fa;
+  flex: 1;
+}
+
+.display-card-rename-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #9fb0bf;
+  border-radius: 8px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.display-card-rename-btn:hover {
+  background: rgba(245, 193, 75, 0.1);
+  color: #f5c14b;
+  border-color: rgba(245, 193, 75, 0.4);
+}
+
+.display-card-rename {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.display-card-rename input {
+  background: #0c1a24;
+  border: 1px solid rgba(245, 193, 75, 0.4);
+  color: #f5f7fa;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.display-card-rename input:focus {
+  outline: none;
+  border-color: #f5c14b;
+  box-shadow: 0 0 0 2px rgba(245, 193, 75, 0.2);
+}
+
+.display-card-rename-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.display-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.display-card-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.badge-active {
+  color: #1a1a1a;
+  background: #f5c14b;
+}
+
+.badge-disabled {
+  color: #ff8888;
+  background: rgba(255, 136, 136, 0.15);
+  border: 1px solid rgba(255, 136, 136, 0.35);
+}
+
+.display-card-meta p {
+  margin: 6px 0;
+  color: #d7e0e8;
+  font-size: 0.92rem;
+}
+
+.display-card-meta strong {
+  color: #9fb0bf;
+  font-weight: 600;
+}
+
+.display-card-meta code {
+  background: rgba(255, 255, 255, 0.06);
+  color: #f5c14b;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.display-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.display-action-btn {
+  background: #0c1a24;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f5f7fa;
+  border-radius: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.display-action-btn:hover {
+  background: #10202c;
+}
+
+.display-action-btn.primary {
+  background: rgba(245, 193, 75, 0.15);
+  border-color: rgba(245, 193, 75, 0.45);
+  color: #f5c14b;
+  font-weight: 600;
+}
+
+.display-action-btn.primary:hover {
+  background: rgba(245, 193, 75, 0.25);
+}
+
+.display-action-btn.save {
+  background: rgba(245, 193, 75, 0.18);
+  border-color: rgba(245, 193, 75, 0.5);
+  color: #f5c14b;
+  font-weight: 600;
+}
+
+.display-action-btn.save:hover {
+  background: rgba(245, 193, 75, 0.28);
+}
+
+.display-action-btn.danger {
+  background: rgba(255, 100, 100, 0.08);
+  border-color: rgba(255, 100, 100, 0.3);
+  color: #ff8888;
+}
+
+.display-action-btn.danger:hover {
+  background: rgba(255, 100, 100, 0.18);
+}
