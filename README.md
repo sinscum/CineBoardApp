@@ -1,73 +1,85 @@
-# React + TypeScript + Vite
+# CineBoard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A cinema poster display board. CineBoard rotates TMDB movie posters across
+configurable display profiles, with banner theming, per-zone content, and a
+two-tier (memory + localStorage) cache. Built with React + Vite + TypeScript.
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- A **TMDB API v4 read access token** — get one at
+  https://www.themoviedb.org/settings/api
+- For local dev: **Node.js 22+**
+- For containers: **Docker** (with the Compose plugin)
 
-## React Compiler
+## Run with Docker Compose
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The TMDB token is a Vite **build-time** variable, so it is baked into the bundle
+when the image is built. Provide it via a `.env` file that Compose reads
+automatically.
 
-## Expanding the ESLint configuration
+```bash
+# 1. Clone
+git clone https://github.com/sinscum/CineBoardApp.git
+cd CineBoardApp
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+# 2. Supply your TMDB token
+cp .env.example .env
+#   then edit .env and set VITE_TMDB_READ_TOKEN=your_token_here
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# 3. Build and start
+docker compose up --build -d
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Open **http://localhost:8080**.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Common commands:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+docker compose logs -f      # follow logs
+docker compose down         # stop and remove the container
+docker compose up --build   # rebuild after pulling new code or changing the token
 ```
+
+> The app is served by nginx with an SPA routing fallback, so deep links like
+> `/display/1` and `/library` work on refresh.
+
+### Change the port
+
+Edit the port mapping in [`docker-compose.yml`](docker-compose.yml) — the
+default `8080:80` maps host `8080` to the container's nginx on `80`.
+
+## Run with plain Docker (no Compose)
+
+```bash
+docker build \
+  --build-arg VITE_TMDB_READ_TOKEN="your_token_here" \
+  -t cineboard .
+
+docker run -d -p 8080:80 --name cineboard cineboard
+```
+
+## Run locally (dev)
+
+```bash
+npm install
+cp .env.example .env.local   # set VITE_TMDB_READ_TOKEN
+npm run dev
+```
+
+Open the URL Vite prints (default **http://localhost:5173**).
+
+### Scripts
+
+| Command           | Description                          |
+| ----------------- | ------------------------------------ |
+| `npm run dev`     | Dev server with hot reload           |
+| `npm run build`   | Type-check + production build (`dist/`) |
+| `npm run preview` | Serve the production build locally   |
+| `npm run lint`    | Run ESLint                           |
+
+## Security note
+
+Because `VITE_TMDB_READ_TOKEN` is inlined into the JavaScript bundle at build
+time, anyone with access to the built app (or a published image) can extract the
+token. Keep images **private**, or front TMDB with a small backend proxy that
+holds the token server-side if you need to distribute the app publicly.
