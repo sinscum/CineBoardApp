@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:server": "npm --prefix server run dev",
+    "dev:all": "concurrently -n web,api -c blue,magenta \"npm run dev\" \"npm run dev:server\"",
     "build": "tsc -b && vite build",
+    "build:server": "npm --prefix server run build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -15,6 +18,7 @@
     "react-router-dom": "^7.17.0"
   },
   "devDependencies": {
+    "concurrently": "^9.0.1",
     "@eslint/js": "^10.0.1",
     "@types/node": "^24.12.3",
     "@types/react": "^19.2.14",
