@@ -4,9 +4,30 @@ export type TMDBCategoryKey =
   | "upcoming"
   | "top_rated";
 
-export type DisplaySourceMode = "category" | "genre";
+export type DisplaySourceMode =
+  | "category"
+  | "genre"
+  | "filters"
+  | "collection";
+
 export type PosterFitMode = "contain" | "cover" | "stretch";
 export type BannerMode = "auto" | "custom" | "none";
+
+export type TMDBSortByKey =
+  | "popularity.desc"
+  | "primary_release_date.desc"
+  | "vote_average.desc"
+  | "vote_count.desc";
+
+export type YearBucketKey =
+  | "all"
+  | "2020s"
+  | "2010s"
+  | "2000s"
+  | "1990s"
+  | "1980s"
+  | "1970s"
+  | "pre-1970";
 
 export type BannerFontPreset =
   | "Bebas Neue"
@@ -39,10 +60,9 @@ export type BannerContentKind =
   | "preset-tonight-only"
   | "preset-feature-presentation";
 
-// Actual preset keys — excludes "auto" and "custom" which have special runtime handling
-export type BannerPresetKind = Exclude<BannerContentKind, "auto" | "custom">;
-
-export const BANNER_CONTENT_PRESETS: Record<BannerPresetKind, string> = {
+export const BANNER_CONTENT_PRESETS: Record<BannerContentKind, string> = {
+  auto: "",
+  custom: "",
   "preset-coming-soon": "COMING SOON",
   "preset-now-playing": "NOW PLAYING",
   "preset-now-showing": "NOW SHOWING",
@@ -54,13 +74,6 @@ export const BANNER_CONTENT_PRESETS: Record<BannerPresetKind, string> = {
   "preset-tonight-only": "TONIGHT ONLY",
   "preset-feature-presentation": "FEATURE PRESENTATION",
 };
-
-// All valid BannerContentKind values for validation
-export const VALID_CONTENT_KINDS: BannerContentKind[] = [
-  "auto",
-  "custom",
-  ...(Object.keys(BANNER_CONTENT_PRESETS) as BannerPresetKind[]),
-];
 
 export interface BannerTheme {
   id: string;
@@ -93,21 +106,44 @@ export interface BannerTheme {
   description?: string;
 }
 
-/**
- * Per-display settings. Visual presentation (fonts, banner sizes, modes, images,
- * text visibility) lives exclusively on BannerTheme — only activeThemeId is stored
- * here so the display always reads from the current theme object.
- */
 export interface DisplaySettings {
   sourceMode: DisplaySourceMode;
   category: TMDBCategoryKey;
   genreId: number;
   rotationSeconds: number;
   posterFitMode: PosterFitMode;
+
+  filterGenreId: number | null;
+  filterYearBucket: YearBucketKey;
+  filterLanguage: string;
+  filterSortBy: TMDBSortByKey;
+  filterMinRating: number;
+
+  collectionId: number | null;
+  collectionName: string;
+
+  topBannerHeight: number;
+  bottomBannerHeight: number;
+  topBannerMode: BannerMode;
+  bottomBannerMode: BannerMode;
+  topBannerImage: string | null;
+  bottomBannerImage: string | null;
   theaterName: string;
+
   activeThemeId: string;
 
-  // Per-zone content (auto, preset, or custom text)
+  topFont: BannerFontPreset;
+  bottomFont: BannerFontPreset;
+  titleFont: BannerFontPreset;
+  sideTextSize: number;
+  titleTextSize: number;
+  showTopLeft: boolean;
+  showTopCenter: boolean;
+  showTopRight: boolean;
+  showBottomLeft: boolean;
+  showBottomCenter: boolean;
+  showBottomRight: boolean;
+
   topLeftContent: BannerContentKind;
   topLeftCustomText: string;
   topCenterContent: BannerContentKind;
@@ -141,8 +177,37 @@ export const DEFAULT_DISPLAY_SETTINGS: DisplaySettings = {
   genreId: 27,
   rotationSeconds: 30,
   posterFitMode: "contain",
+
+  filterGenreId: null,
+  filterYearBucket: "all",
+  filterLanguage: "all",
+  filterSortBy: "popularity.desc",
+  filterMinRating: 0,
+
+  collectionId: null,
+  collectionName: "",
+
+  topBannerHeight: 90,
+  bottomBannerHeight: 110,
+  topBannerMode: "auto",
+  bottomBannerMode: "auto",
+  topBannerImage: null,
+  bottomBannerImage: null,
   theaterName: "CineBoard Theater",
+
   activeThemeId: "classic-cinema",
+
+  topFont: "Oswald",
+  bottomFont: "Montserrat",
+  titleFont: "Bebas Neue",
+  sideTextSize: 22,
+  titleTextSize: 40,
+  showTopLeft: true,
+  showTopCenter: true,
+  showTopRight: true,
+  showBottomLeft: true,
+  showBottomCenter: true,
+  showBottomRight: true,
 
   topLeftContent: "auto",
   topLeftCustomText: "",

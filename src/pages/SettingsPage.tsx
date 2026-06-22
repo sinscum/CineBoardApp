@@ -3,8 +3,9 @@ import "../styles/settings-page.css";
 import type {
   DisplaySettings,
   BannerContentKind,
+  TMDBSortByKey,
+  YearBucketKey,
 } from "../types/displaySettings";
-
 import {
   loadDisplaySettings,
   saveDisplaySettings,
@@ -21,7 +22,11 @@ import {
   THEMES_CHANGED_EVENT,
 } from "../services/themes";
 import { clearAllCache, getCacheStats } from "../services/cache";
-import { GENRES } from "../constants/genres";
+import {
+  searchCollections,
+  fetchCollectionMovies,
+  type CollectionSearchResult,
+} from "../services/tmdb";
 
 const CONTENT_OPTIONS: { value: BannerContentKind; label: string }[] = [
   { value: "auto", label: "Auto (default for this zone)" },
@@ -38,6 +43,50 @@ const CONTENT_OPTIONS: { value: BannerContentKind; label: string }[] = [
   { value: "preset-feature-presentation", label: "FEATURE PRESENTATION" },
 ];
 
+const yearBucketOptions: { value: YearBucketKey; label: string }[] = [
+  { value: "all", label: "All Years" },
+  { value: "2020s", label: "2020s" },
+  { value: "2010s", label: "2010s" },
+  { value: "2000s", label: "2000s" },
+  { value: "1990s", label: "1990s" },
+  { value: "1980s", label: "1980s" },
+  { value: "1970s", label: "1970s" },
+  { value: "pre-1970", label: "Pre-1970" },
+];
+
+const languageOptions: { value: string; label: string }[] = [
+  { value: "all", label: "All Languages" },
+  { value: "en", label: "English" },
+  { value: "es", label: "Spanish" },
+  { value: "fr", label: "French" },
+  { value: "de", label: "German" },
+  { value: "it", label: "Italian" },
+  { value: "ja", label: "Japanese" },
+  { value: "ko", label: "Korean" },
+  { value: "zh", label: "Mandarin" },
+  { value: "hi", label: "Hindi" },
+];
+
+const sortByOptions: { value: TMDBSortByKey; label: string }[] = [
+  { value: "popularity.desc", label: "Popular" },
+  { value: "primary_release_date.desc", label: "Newest" },
+  { value: "vote_average.desc", label: "Top Rated" },
+  { value: "vote_count.desc", label: "Most Voted" },
+];
+
+const minRatingOptions: { value: number; label: string }[] = [
+  { value: 0, label: "Any Rating" },
+  { value: 6, label: "6.0+" },
+  { value: 7, label: "7.0+" },
+  { value: 7.5, label: "7.5+" },
+  { value: 8, label: "8.0+" },
+  { value: 8.5, label: "8.5+" },
+];
+
+interface EnrichedCollection extends CollectionSearchResult {
+  movieCount: number;
+}
+
 function SettingsPage() {
   const [activeId, setActiveId] = useState<number>(getActiveDisplayId());
   const [activeName, setActiveName] = useState<string>(
@@ -49,6 +98,12 @@ function SettingsPage() {
   const [statusMessage, setStatusMessage] = useState("");
   const [cacheStats, setCacheStats] = useState(getCacheStats());
   const [themesRefresh, setThemesRefresh] = useState(0);
+
+  const [collectionQuery, setCollectionQuery] = useState("");
+  const [collectionResults, setCollectionResults] = useState<
+    EnrichedCollection[]
+  >([]);
+  const [collectionLoading, setCollectionLoading] = useState(false);
 
   useEffect(() => {
     function refresh() {
@@ -132,31 +187,80 @@ function SettingsPage() {
     window.setTimeout(() => setStatusMessage(""), 2000);
   }
 
-  type ContentKey = keyof Pick<
-    DisplaySettings,
-    | "topLeftContent"
-    | "topCenterContent"
-    | "topRightContent"
-    | "bottomLeftContent"
-    | "bottomCenterContent"
-    | "bottomRightContent"
-  >;
+  async function handleCollectionSearch(e: React.FormEvent) {
+    e.preventDefault();
+    if (!collectionQuery.trim()) return;
+    try {
+      setCollectionLoading(true);
 
-  type CustomTextKey = keyof Pick<
-    DisplaySettings,
-    | "topLeftCustomText"
-    | "topCenterCustomText"
-    | "topRightCustomText"
-    | "bottomLeftCustomText"
-    | "bottomCenterCustomText"
-    | "bottomRightCustomText"
-  >;
+      const raw = await searchCollections(collectionQuery);
+      const enriched = await Promise.all(
+        raw.map(async (c) => {
+          try {
+            const movies = await fetchCollectionMovies(c.id);
+            return { ...c, movieCount: movies.length };
+          } catch {
+            return { ...c, movieCount: 0 };
+          }
+        })
+      );
+
+      const filtered = enriched
+        .filter((c) => c.movieCount >= 2)
+        .sort((a, b) => b.movieCount - a.movieCount);
+
+      setCollectionResults(filtered);
+    } catch {
+      setStatusMessage("Collection search failed.");
+      window.setTimeout(() => setStatusMessage(""), 2500);
+    } finally {
+      setCollectionLoading(false);
+    }
+  }
+
+  function handleSelectCollection(c: EnrichedCollection) {
+    setSettings((prev) => ({
+      ...prev,
+      collectionId: c.id,
+      collectionName: c.name,
+    }));
+    setCollectionResults([]);
+    setCollectionQuery("");
+    setStatusMessage(
+      `Selected "${c.name}". Click Save Settings to apply to ${activeName}.`
+    );
+    window.setTimeout(() => setStatusMessage(""), 3000);
+  }
+
+  function handleClearCollection() {
+    setSettings((prev) => ({
+      ...prev,
+      collectionId: null,
+      collectionName: "",
+    }));
+  }
 
   function renderZoneEditor(
     label: string,
     autoHint: string,
-    contentKey: ContentKey,
-    customKey: CustomTextKey
+    contentKey: keyof Pick<
+      DisplaySettings,
+      | "topLeftContent"
+      | "topCenterContent"
+      | "topRightContent"
+      | "bottomLeftContent"
+      | "bottomCenterContent"
+      | "bottomRightContent"
+    >,
+    customKey: keyof Pick<
+      DisplaySettings,
+      | "topLeftCustomText"
+      | "topCenterCustomText"
+      | "topRightCustomText"
+      | "bottomLeftCustomText"
+      | "bottomCenterCustomText"
+      | "bottomRightCustomText"
+    >
   ) {
     const contentValue = settings[contentKey];
     const customValue = settings[customKey];
@@ -185,9 +289,9 @@ function SettingsPage() {
         {isCustom && (
           <input
             type="text"
-            value={customValue}
+            value={customValue as string}
             onChange={(e) =>
-              setSettings((prev) => ({ ...prev, [customKey]: e.target.value }))
+              updateSetting(customKey, e.target.value as never)
             }
             placeholder="Type custom text..."
             maxLength={80}
@@ -226,40 +330,267 @@ function SettingsPage() {
             >
               <option value="category">Category</option>
               <option value="genre">Genre</option>
+              <option value="filters">Filters (Discover)</option>
+              <option value="collection">Collection (Franchise)</option>
             </select>
           </div>
 
-          <div className="settings-field">
-            <label className="settings-field-label">TMDB Category</label>
-            <select
-              value={settings.category}
-              onChange={(e) =>
-                updateSetting(
-                  "category",
-                  e.target.value as DisplaySettings["category"]
-                )
-              }
-            >
-              <option value="popular">Popular</option>
-              <option value="now_playing">Now Playing</option>
-              <option value="upcoming">Coming Soon</option>
-              <option value="top_rated">Top Rated</option>
-            </select>
-          </div>
+          {settings.sourceMode === "category" && (
+            <div className="settings-field">
+              <label className="settings-field-label">TMDB Category</label>
+              <select
+                value={settings.category}
+                onChange={(e) =>
+                  updateSetting(
+                    "category",
+                    e.target.value as DisplaySettings["category"]
+                  )
+                }
+              >
+                <option value="popular">Popular</option>
+                <option value="now_playing">Now Playing</option>
+                <option value="upcoming">Coming Soon</option>
+                <option value="top_rated">Top Rated</option>
+              </select>
+            </div>
+          )}
 
-          <div className="settings-field">
-            <label className="settings-field-label">TMDB Genre</label>
-            <select
-              value={String(settings.genreId)}
-              onChange={(e) => updateSetting("genreId", Number(e.target.value))}
-            >
-              {GENRES.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {settings.sourceMode === "genre" && (
+            <div className="settings-field">
+              <label className="settings-field-label">TMDB Genre</label>
+              <select
+                value={String(settings.genreId)}
+                onChange={(e) =>
+                  updateSetting("genreId", Number(e.target.value))
+                }
+              >
+                <option value="28">Action</option>
+                <option value="12">Adventure</option>
+                <option value="16">Animation</option>
+                <option value="35">Comedy</option>
+                <option value="80">Crime</option>
+                <option value="18">Drama</option>
+                <option value="14">Fantasy</option>
+                <option value="27">Horror</option>
+                <option value="9648">Mystery</option>
+                <option value="10749">Romance</option>
+                <option value="878">Science Fiction</option>
+                <option value="53">Thriller</option>
+                <option value="37">Western</option>
+              </select>
+            </div>
+          )}
+
+          {settings.sourceMode === "filters" && (
+            <>
+              <div className="settings-field">
+                <label className="settings-field-label">Genre</label>
+                <select
+                  value={
+                    settings.filterGenreId === null
+                      ? "all"
+                      : String(settings.filterGenreId)
+                  }
+                  onChange={(e) =>
+                    updateSetting(
+                      "filterGenreId",
+                      e.target.value === "all" ? null : Number(e.target.value)
+                    )
+                  }
+                >
+                  <option value="all">All Genres</option>
+                  <option value="28">Action</option>
+                  <option value="12">Adventure</option>
+                  <option value="16">Animation</option>
+                  <option value="35">Comedy</option>
+                  <option value="80">Crime</option>
+                  <option value="18">Drama</option>
+                  <option value="14">Fantasy</option>
+                  <option value="27">Horror</option>
+                  <option value="9648">Mystery</option>
+                  <option value="10749">Romance</option>
+                  <option value="878">Science Fiction</option>
+                  <option value="53">Thriller</option>
+                  <option value="37">Western</option>
+                </select>
+              </div>
+
+              <div className="settings-field">
+                <label className="settings-field-label">Year</label>
+                <select
+                  value={settings.filterYearBucket}
+                  onChange={(e) =>
+                    updateSetting(
+                      "filterYearBucket",
+                      e.target.value as YearBucketKey
+                    )
+                  }
+                >
+                  {yearBucketOptions.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="settings-field">
+                <label className="settings-field-label">Language</label>
+                <select
+                  value={settings.filterLanguage}
+                  onChange={(e) =>
+                    updateSetting("filterLanguage", e.target.value)
+                  }
+                >
+                  {languageOptions.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="settings-field">
+                <label className="settings-field-label">Sort</label>
+                <select
+                  value={settings.filterSortBy}
+                  onChange={(e) =>
+                    updateSetting(
+                      "filterSortBy",
+                      e.target.value as TMDBSortByKey
+                    )
+                  }
+                >
+                  {sortByOptions.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="settings-field">
+                <label className="settings-field-label">Min Rating</label>
+                <select
+                  value={String(settings.filterMinRating)}
+                  onChange={(e) =>
+                    updateSetting("filterMinRating", Number(e.target.value))
+                  }
+                >
+                  {minRatingOptions.map((o) => (
+                    <option key={o.value} value={String(o.value)}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
+
+          {settings.sourceMode === "collection" && (
+            <>
+              {settings.collectionId !== null && (
+                <div className="settings-field">
+                  <label className="settings-field-label">
+                    Active Collection
+                  </label>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 10,
+                      alignItems: "center",
+                      background: "#0c1a24",
+                      border: "1px solid rgba(245, 193, 75, 0.35)",
+                      borderRadius: 10,
+                      padding: "10px 14px",
+                    }}
+                  >
+                    <span
+                      style={{ flex: 1, color: "#f5c14b", fontWeight: 600 }}
+                    >
+                      {settings.collectionName || `Collection #${settings.collectionId}`}
+                    </span>
+                    <button
+                      type="button"
+                      className="settings-button"
+                      onClick={handleClearCollection}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <form
+                className="settings-field"
+                onSubmit={handleCollectionSearch}
+              >
+                <label className="settings-field-label">
+                  {settings.collectionId !== null
+                    ? "Search for a different collection"
+                    : "Search for a collection"}
+                </label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    type="text"
+                    placeholder="e.g. Halloween, Star Wars, Marvel..."
+                    value={collectionQuery}
+                    onChange={(e) => setCollectionQuery(e.target.value)}
+                    style={{ flex: 1 }}
+                  />
+                  <button type="submit" className="settings-button">
+                    {collectionLoading ? "Searching..." : "Search"}
+                  </button>
+                </div>
+              </form>
+
+              {collectionResults.length > 0 && (
+                <div className="settings-field">
+                  <label className="settings-field-label">
+                    Pick a collection ({collectionResults.length} found)
+                  </label>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 6,
+                      maxHeight: 300,
+                      overflowY: "auto",
+                      background: "#0c1a24",
+                      border: "1px solid rgba(255, 255, 255, 0.08)",
+                      borderRadius: 10,
+                      padding: 8,
+                    }}
+                  >
+                    {collectionResults.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => handleSelectCollection(c)}
+                        style={{
+                          textAlign: "left",
+                          background: "#101a24",
+                          border: "1px solid rgba(255, 255, 255, 0.06)",
+                          color: "#f5f7fa",
+                          borderRadius: 8,
+                          padding: "10px 12px",
+                          cursor: "pointer",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <span>{c.name}</span>
+                        <span style={{ color: "#9fb0bf", fontSize: "0.85rem" }}>
+                          {c.movieCount} movies
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
 
           <div className="settings-field">
             <label className="settings-field-label">Rotation Interval</label>
@@ -393,7 +724,7 @@ function SettingsPage() {
           )}
           {renderZoneEditor(
             "Top Center",
-            "Mode label (e.g. Horror Showcase)",
+            "Mode label",
             "topCenterContent",
             "topCenterCustomText"
           )}

@@ -1,0 +1,17 @@
+/* ============================================================
+   Collection count badge (append to existing library-page.css)
+   ============================================================ */
+
+.library-collection-count {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #f5c14b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 4px 9px;
+  border-radius: 6px;
+  border: 1px solid rgba(245, 193, 75, 0.3);
+}

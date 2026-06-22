@@ -12,13 +12,50 @@ import { getCached, setCached } from "./cache";
 
 const TMDB_READ_TOKEN = import.meta.env.VITE_TMDB_READ_TOKEN;
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
-const LIBRARY_CONCURRENCY = 5;
 
 export type TMDBCategory =
   | "popular"
   | "now_playing"
   | "upcoming"
   | "top_rated";
+
+export type TMDBSortBy =
+  | "popularity.desc"
+  | "primary_release_date.desc"
+  | "vote_average.desc"
+  | "vote_count.desc";
+
+export interface DiscoverFilters {
+  genreId: number | null;
+  yearBucket: string;
+  language: string;
+  sortBy: TMDBSortBy;
+  minRating: number;
+}
+
+export interface CollectionSearchResult {
+  id: number;
+  name: string;
+  posterUrl: string | null;
+  backdropUrl: string | null;
+}
+
+interface TMDBCollectionSearchResponse {
+  results: Array<{
+    id: number;
+    name: string;
+    poster_path: string | null;
+    backdrop_path: string | null;
+  }>;
+}
+
+interface TMDBCollectionDetailsResponse {
+  id: number;
+  name: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  parts: TMDBMovieSearchResult[];
+}
 
 function getHeaders(): HeadersInit {
   return {
@@ -67,31 +104,6 @@ async function fetchJson<T>(
   return data;
 }
 
-/**
- * Run an async function over an array with at most `limit` in-flight at once.
- * Preserves input order in the returned array.
- */
-async function mapWithConcurrency<T, R>(
-  items: T[],
-  limit: number,
-  fn: (item: T) => Promise<R>
-): Promise<R[]> {
-  const results: R[] = new Array(items.length);
-  let next = 0;
-
-  async function worker() {
-    while (next < items.length) {
-      const i = next++;
-      results[i] = await fn(items[i]);
-    }
-  }
-
-  await Promise.all(
-    Array.from({ length: Math.min(limit, items.length) }, worker)
-  );
-  return results;
-}
-
 async function getConfiguration(): Promise<TMDBConfigurationResponse> {
   return fetchJson<TMDBConfigurationResponse>(
     `${TMDB_BASE_URL}/configuration`,
@@ -125,6 +137,80 @@ async function getMoviesByGenre(
   return fetchJson<TMDBMovieSearchResponse>(
     `${TMDB_BASE_URL}/discover/movie?language=en-US&sort_by=popularity.desc&page=1&with_genres=${genreId}&include_adult=false`,
     `genre-${genreId}`,
+    6 * 60 * 60 * 1000
+  );
+}
+
+function yearBucketToDateParams(bucket: string): {
+  gte?: string;
+  lte?: string;
+} {
+  switch (bucket) {
+    case "2020s":
+      return { gte: "2020-01-01", lte: "2029-12-31" };
+    case "2010s":
+      return { gte: "2010-01-01", lte: "2019-12-31" };
+    case "2000s":
+      return { gte: "2000-01-01", lte: "2009-12-31" };
+    case "1990s":
+      return { gte: "1990-01-01", lte: "1999-12-31" };
+    case "1980s":
+      return { gte: "1980-01-01", lte: "1989-12-31" };
+    case "1970s":
+      return { gte: "1970-01-01", lte: "1979-12-31" };
+    case "pre-1970":
+      return { lte: "1969-12-31" };
+    default:
+      return {};
+  }
+}
+
+function buildDiscoverUrl(filters: DiscoverFilters): string {
+  const params = new URLSearchParams({
+    language: "en-US",
+    sort_by: filters.sortBy,
+    page: "1",
+    include_adult: "false",
+    "vote_count.gte": "50",
+  });
+
+  if (filters.genreId !== null) {
+    params.set("with_genres", String(filters.genreId));
+  }
+
+  if (filters.language && filters.language !== "all") {
+    params.set("with_original_language", filters.language);
+  }
+
+  if (filters.minRating > 0) {
+    params.set("vote_average.gte", String(filters.minRating));
+  }
+
+  const dateParams = yearBucketToDateParams(filters.yearBucket);
+  if (dateParams.gte) params.set("primary_release_date.gte", dateParams.gte);
+  if (dateParams.lte) params.set("primary_release_date.lte", dateParams.lte);
+
+  return `${TMDB_BASE_URL}/discover/movie?${params.toString()}`;
+}
+
+function filtersCacheKey(filters: DiscoverFilters): string {
+  return [
+    "discover",
+    filters.genreId ?? "any",
+    filters.yearBucket,
+    filters.language,
+    filters.sortBy,
+    filters.minRating,
+  ].join("|");
+}
+
+async function getDiscoverMovies(
+  filters: DiscoverFilters
+): Promise<TMDBMovieSearchResponse> {
+  const url = buildDiscoverUrl(filters);
+  return fetchJson<TMDBMovieSearchResponse>(
+    url,
+    filtersCacheKey(filters),
     6 * 60 * 60 * 1000
   );
 }
@@ -229,7 +315,8 @@ export async function fetchCategoryMovie(
     throw new Error(`No movies returned from TMDB category "${category}".`);
   }
 
-  const movie = results[Math.floor(Math.random() * results.length)];
+  const randomIndex = Math.floor(Math.random() * results.length);
+  const movie = results[randomIndex];
   return buildDisplayDataFromMovie(movie, configuration);
 }
 
@@ -246,7 +333,8 @@ export async function fetchGenreMovie(
     throw new Error(`No movies returned for genre ID ${genreId}.`);
   }
 
-  const movie = results[Math.floor(Math.random() * results.length)];
+  const randomIndex = Math.floor(Math.random() * results.length);
+  const movie = results[randomIndex];
   return buildDisplayDataFromMovie(movie, configuration);
 }
 
@@ -258,11 +346,11 @@ export async function fetchCategoryMovies(
     getCategoryMovies(category),
   ]);
 
-  const results = (categoryResults.results ?? []).slice(0, 20);
+  const results = categoryResults.results ?? [];
   if (results.length === 0) return [];
 
-  return mapWithConcurrency(results, LIBRARY_CONCURRENCY, (m) =>
-    buildDisplayDataFromMovie(m, configuration)
+  return Promise.all(
+    results.slice(0, 20).map((m) => buildDisplayDataFromMovie(m, configuration))
   );
 }
 
@@ -274,11 +362,11 @@ export async function fetchGenreMovies(
     getMoviesByGenre(genreId),
   ]);
 
-  const results = (genreResults.results ?? []).slice(0, 20);
+  const results = genreResults.results ?? [];
   if (results.length === 0) return [];
 
-  return mapWithConcurrency(results, LIBRARY_CONCURRENCY, (m) =>
-    buildDisplayDataFromMovie(m, configuration)
+  return Promise.all(
+    results.slice(0, 20).map((m) => buildDisplayDataFromMovie(m, configuration))
   );
 }
 
@@ -299,8 +387,8 @@ export async function searchMovies(
   ]);
 
   const movies = (results.results ?? []).slice(0, 20);
-  return mapWithConcurrency(movies, LIBRARY_CONCURRENCY, (m) =>
-    buildDisplayDataFromMovie(m, configuration)
+  return Promise.all(
+    movies.map((m) => buildDisplayDataFromMovie(m, configuration))
   );
 }
 
@@ -343,4 +431,118 @@ export async function fetchMovieById(
     runtime,
     rating,
   };
+}
+
+export async function discoverMovies(
+  filters: DiscoverFilters
+): Promise<MovieDisplayData[]> {
+  const [configuration, results] = await Promise.all([
+    getConfiguration(),
+    getDiscoverMovies(filters),
+  ]);
+
+  const movies = (results.results ?? []).slice(0, 20);
+  if (movies.length === 0) return [];
+
+  return Promise.all(
+    movies.map((m) => buildDisplayDataFromMovie(m, configuration))
+  );
+}
+
+export async function fetchDiscoverMovie(
+  filters: DiscoverFilters
+): Promise<MovieDisplayData> {
+  const [configuration, results] = await Promise.all([
+    getConfiguration(),
+    getDiscoverMovies(filters),
+  ]);
+
+  const list = results.results ?? [];
+  if (list.length === 0) {
+    throw new Error("No movies match the selected filters.");
+  }
+
+  const movie = list[Math.floor(Math.random() * list.length)];
+  return buildDisplayDataFromMovie(movie, configuration);
+}
+
+export async function searchCollections(
+  query: string
+): Promise<CollectionSearchResult[]> {
+  if (!query.trim()) return [];
+
+  const [configuration, response] = await Promise.all([
+    getConfiguration(),
+    fetchJson<TMDBCollectionSearchResponse>(
+      `${TMDB_BASE_URL}/search/collection?query=${encodeURIComponent(
+        query
+      )}&language=en-US&page=1`,
+      `collection-search-${query.toLowerCase()}`,
+      6 * 60 * 60 * 1000
+    ),
+  ]);
+
+  const baseUrl = configuration.images.secure_base_url;
+  const posterSize = configuration.images.poster_sizes.includes("w500")
+    ? "w500"
+    : configuration.images.poster_sizes[0];
+  const backdropSize = configuration.images.backdrop_sizes.includes("w780")
+    ? "w780"
+    : configuration.images.backdrop_sizes[0];
+
+  return (response.results ?? []).slice(0, 20).map((c) => ({
+    id: c.id,
+    name: c.name,
+    posterUrl: buildImageUrl(baseUrl, posterSize, c.poster_path),
+    backdropUrl: buildImageUrl(baseUrl, backdropSize, c.backdrop_path),
+  }));
+}
+
+async function getCollectionDetails(
+  collectionId: number
+): Promise<TMDBCollectionDetailsResponse> {
+  return fetchJson<TMDBCollectionDetailsResponse>(
+    `${TMDB_BASE_URL}/collection/${collectionId}?language=en-US`,
+    `collection-${collectionId}`,
+    24 * 60 * 60 * 1000
+  );
+}
+
+export async function fetchCollectionMovies(
+  collectionId: number
+): Promise<MovieDisplayData[]> {
+  const [configuration, details] = await Promise.all([
+    getConfiguration(),
+    getCollectionDetails(collectionId),
+  ]);
+
+  const parts = details.parts ?? [];
+  if (parts.length === 0) return [];
+
+  const sorted = [...parts].sort((a, b) => {
+    const da = a.release_date || "9999";
+    const db = b.release_date || "9999";
+    return da.localeCompare(db);
+  });
+
+  return Promise.all(
+    sorted.slice(0, 30).map((m) => buildDisplayDataFromMovie(m, configuration))
+  );
+}
+
+export async function fetchCollectionMovie(
+  collectionId: number
+): Promise<MovieDisplayData> {
+  const [configuration, details] = await Promise.all([
+    getConfiguration(),
+    getCollectionDetails(collectionId),
+  ]);
+
+  const parts = details.parts ?? [];
+  if (parts.length === 0) {
+    throw new Error("Collection has no movies.");
+  }
+
+  const movie = parts[Math.floor(Math.random() * parts.length)];
+  return buildDisplayDataFromMovie(movie, configuration);
 }
