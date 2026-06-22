@@ -1,77 +1,379 @@
 .dashboard-page {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 28px;
 }
 
-.dashboard-heading h1 {
+.dash-heading h1 {
   margin: 0;
   font-size: 2rem;
   color: #f5f7fa;
 }
 
-.dashboard-subtitle {
+.dash-subtitle {
   margin-top: 6px;
   color: #9fb0bf;
   font-size: 0.95rem;
 }
 
-.dashboard-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
+.dash-section-title {
+  margin: 0 0 14px;
+  font-size: 1.2rem;
+  color: #f5f7fa;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.dashboard-card,
-.dashboard-panel {
+.dash-section-count {
+  color: #9fb0bf;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.dash-clear-link {
+  background: transparent;
+  border: none;
+  color: #9fb0bf;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-left: auto;
+}
+
+.dash-clear-link:hover {
+  background: rgba(255, 100, 100, 0.08);
+  color: #ff8888;
+}
+
+.dash-empty {
+  background: #0b1721;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 24px 18px;
+  color: #9fb0bf;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   Service status row
+   ============================================================ */
+
+.dash-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.dash-status-chip {
   background: #0b1721;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 18px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
-}
-
-.dashboard-card-label {
+  border-radius: 999px;
+  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   font-size: 0.85rem;
-  color: #9fb0bf;
-  margin-bottom: 8px;
+  color: #d7e0e8;
+  transition: border-color 0.15s ease;
 }
 
-.dashboard-card-value {
-  font-size: 1.2rem;
+.dash-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  background: #9fb0bf;
+}
+
+.dash-status-label {
   font-weight: 600;
-  color: #f5c14b;
-}
-
-.dashboard-panels {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.dashboard-panel-title {
-  margin: 0 0 14px;
-  font-size: 1.1rem;
   color: #f5f7fa;
 }
 
-.dashboard-list {
+.dash-status-value {
+  color: #9fb0bf;
+}
+
+.chip-online {
+  border-color: rgba(95, 200, 138, 0.4);
+}
+.chip-online .dash-status-dot {
+  background: #5fc88a;
+  box-shadow: 0 0 8px rgba(95, 200, 138, 0.5);
+}
+
+.chip-offline {
+  border-color: rgba(255, 100, 100, 0.4);
+}
+.chip-offline .dash-status-dot {
+  background: #ff8888;
+  box-shadow: 0 0 8px rgba(255, 100, 100, 0.5);
+}
+
+.chip-idle {
+  border-color: rgba(159, 176, 191, 0.3);
+}
+.chip-idle .dash-status-dot {
+  background: #6b7c8e;
+}
+
+.chip-neutral {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ============================================================
+   Quick actions
+   ============================================================ */
+
+.dash-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.dash-btn {
+  background: #0c1a24;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f5f7fa;
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 0.92rem;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.dash-btn:hover:not(:disabled) {
+  background: #10202c;
+}
+
+.dash-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dash-btn-primary {
+  background: rgba(245, 193, 75, 0.15);
+  border-color: rgba(245, 193, 75, 0.45);
+  color: #f5c14b;
+  font-weight: 600;
+}
+
+.dash-btn-primary:hover:not(:disabled) {
+  background: rgba(245, 193, 75, 0.25);
+}
+
+/* ============================================================
+   Display preview grid + card
+   ============================================================ */
+
+.dash-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 280px));
+  gap: 16px;
+  justify-content: start;
+}
+
+.dash-preview-card {
+  background: #0b1721;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dash-preview-card-active {
+  border-color: #f5c14b;
+  box-shadow: 0 0 0 2px rgba(245, 193, 75, 0.35),
+    0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.dash-preview-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dash-preview-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dash-preview-name {
   margin: 0;
-  padding-left: 18px;
+  font-size: 1.1rem;
+  color: #f5f7fa;
+  flex: 1;
+}
+
+.dash-preview-source {
+  color: #9fb0bf;
+  font-size: 0.85rem;
+}
+
+.dash-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  padding: 4px 9px;
+  border-radius: 999px;
+}
+
+.dash-badge-active {
+  color: #1a1a1a;
+  background: #f5c14b;
+}
+
+/* ============================================================
+   Preview frame (clean poster, no overlays)
+   ============================================================ */
+
+.dash-preview-frame {
+  position: relative;
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 2 / 3;
+  background: #060d14;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.dash-preview-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  background: #060d14;
+}
+
+.dash-preview-loading,
+.dash-preview-empty {
+  color: #9fb0bf;
+  font-size: 0.85rem;
+}
+
+/* ============================================================
+   Preview card meta + actions
+   ============================================================ */
+
+.dash-preview-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #9fb0bf;
+  font-size: 0.82rem;
+}
+
+.dash-preview-meta strong {
+  color: #f5f7fa;
+  font-weight: 600;
+}
+
+.dash-preview-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.dash-preview-actions .dash-btn {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+
+/* ============================================================
+   Activity feed
+   ============================================================ */
+
+.dash-activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dash-activity-row {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  background: #0b1721;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
   color: #d7e0e8;
 }
 
-.dashboard-list li {
-  margin-bottom: 8px;
+.dash-activity-kind {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-align: center;
+  background: rgba(159, 176, 191, 0.12);
+  color: #9fb0bf;
+  border: 1px solid rgba(159, 176, 191, 0.25);
 }
 
-.dashboard-panel p {
-  margin: 8px 0;
-  color: #d7e0e8;
+.dash-activity-kind.kind-movie-pinned {
+  background: rgba(245, 193, 75, 0.12);
+  color: #f5c14b;
+  border-color: rgba(245, 193, 75, 0.35);
 }
 
-@media (max-width: 900px) {
-  .dashboard-panels {
-    grid-template-columns: 1fr;
-  }
+.dash-activity-kind.kind-movie-cleared {
+  background: rgba(159, 176, 191, 0.12);
+  color: #9fb0bf;
+  border-color: rgba(159, 176, 191, 0.25);
+}
+
+.dash-activity-kind.kind-theme-applied,
+.dash-activity-kind.kind-theme-created {
+  background: rgba(146, 212, 247, 0.1);
+  color: #92d4f7;
+  border-color: rgba(146, 212, 247, 0.3);
+}
+
+.dash-activity-kind.kind-theme-deleted,
+.dash-activity-kind.kind-display-reset {
+  background: rgba(255, 100, 100, 0.08);
+  color: #ff8888;
+  border-color: rgba(255, 100, 100, 0.3);
+}
+
+.dash-activity-kind.kind-settings-saved,
+.dash-activity-kind.kind-display-renamed {
+  background: rgba(95, 200, 138, 0.1);
+  color: #5fc88a;
+  border-color: rgba(95, 200, 138, 0.3);
+}
+
+.dash-activity-detail {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash-activity-time {
+  color: #9fb0bf;
+  font-size: 0.82rem;
+  white-space: nowrap;
 }
