@@ -1,12 +1,34 @@
 services:
-  cineboard:
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    image: cineboard-api:latest
+    container_name: cineboard-api
+    environment:
+      CINEBOARD_API_PORT: 3000
+      CINEBOARD_DB_PATH: /data/cineboard.db
+    volumes:
+      - cineboard-data:/data
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  web:
     build:
       context: .
+      dockerfile: Dockerfile
       args:
         # Pulled from the shell environment or a .env file next to this compose file.
-        VITE_TMDB_READ_TOKEN: ${VITE_TMDB_READ_TOKEN}
+        VITE_TMDB_READ_TOKEN: ${VITE_TMDB_READ_TOKEN:-}
+        VITE_API_BASE_URL: /api
     image: cineboard:latest
-    container_name: cineboard
+    container_name: cineboard-web
+    depends_on:
+      - api
     ports:
       - "8080:80"
     restart: unless-stopped
+
+volumes:
+  cineboard-data:

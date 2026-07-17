@@ -17,6 +17,19 @@ The TMDB token is a Vite **build-time** variable, so it is baked into the bundle
 when the image is built. Provide it via a `.env` file that Compose reads
 automatically.
 
+This Compose stack now runs two services:
+- `web`: the React frontend served by nginx
+- `api`: the Node/Express backend storing its SQLite database in a persistent volume
+
+Example environment values:
+
+```env
+VITE_TMDB_READ_TOKEN=your_token_here
+VITE_API_BASE_URL=/api
+CINEBOARD_API_PORT=3000
+CINEBOARD_DB_PATH=/data/cineboard.db
+```
+
 ```bash
 # 1. Clone
 git clone https://github.com/sinscum/CineBoardApp.git
@@ -30,7 +43,8 @@ cp .env.example .env
 docker compose up --build -d
 ```
 
-Open **http://localhost:8080**.
+Open **http://localhost:8080** for the web app. The API is available at
+**http://localhost:3000/api/health**.
 
 Common commands:
 
@@ -45,8 +59,8 @@ docker compose up --build   # rebuild after pulling new code or changing the tok
 
 ### Change the port
 
-Edit the port mapping in [`docker-compose.yml`](docker-compose.yml) — the
-default `8080:80` maps host `8080` to the container's nginx on `80`.
+Edit the port mappings in [`docker-compose.yml`](docker-compose.yml) — the
+defaults are `8080:80` for the web app and `3000:3000` for the API.
 
 ## Run with plain Docker (no Compose)
 

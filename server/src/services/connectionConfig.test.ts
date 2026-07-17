@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { normalizeConnectionConfig, validateConnectionConfig } from "./connectionConfig.ts";
+import { normalizeConnectionConfig, validateConnectionConfig } from "./connectionConfig.js";
 
 test("accepts complete Plex, Radarr, and Sonarr configs", () => {
   const result = validateConnectionConfig({

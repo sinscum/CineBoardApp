@@ -13,7 +13,9 @@ COPY . .
 # TMDB token is a Vite build-time variable (import.meta.env.VITE_*),
 # so it must be provided at build time and gets baked into the bundle.
 ARG VITE_TMDB_READ_TOKEN
+ARG VITE_API_BASE_URL=/api
 ENV VITE_TMDB_READ_TOKEN=$VITE_TMDB_READ_TOKEN
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 RUN npm run build
 
