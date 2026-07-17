@@ -78,6 +78,15 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_activity_ts ON activity (ts DESC);
 `);
 
+// Media server / automation connection settings
+db.exec(`
+  CREATE TABLE IF NOT EXISTS media_connections (
+    id TEXT PRIMARY KEY,
+    payload_json TEXT NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+`);
+
 // Banner image metadata (Phase B2 will use this; safe to define now)
 db.exec(`
   CREATE TABLE IF NOT EXISTS banners (

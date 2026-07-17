@@ -27,6 +27,8 @@ import {
   fetchCollectionMovies,
   type CollectionSearchResult,
 } from "../services/tmdb";
+import { getStoredConnections, saveConnections, testConnections } from "../services/connections";
+import type { MediaConnectionConfig } from "../types/displaySettings";
 
 const CONTENT_OPTIONS: { value: BannerContentKind; label: string }[] = [
   { value: "auto", label: "Auto (default for this zone)" },
@@ -104,6 +106,13 @@ function SettingsPage() {
     EnrichedCollection[]
   >([]);
   const [collectionLoading, setCollectionLoading] = useState(false);
+
+  const [connections, setConnections] = useState<MediaConnectionConfig>(
+    getStoredConnections()
+  );
+  const [connectionsSaving, setConnectionsSaving] = useState(false);
+  const [connectionsTesting, setConnectionsTesting] = useState(false);
+  const [connectionsMessage, setConnectionsMessage] = useState("");
 
   useEffect(() => {
     function refresh() {
@@ -240,6 +249,101 @@ function SettingsPage() {
     }));
   }
 
+  async function handleSaveConnections() {
+    try {
+      setConnectionsSaving(true);
+      await saveConnections(connections);
+      setConnectionsMessage("Connections saved.");
+      window.setTimeout(() => setConnectionsMessage(""), 2500);
+    } catch (error) {
+      setConnectionsMessage(
+        error instanceof Error ? error.message : "Unable to save connections."
+      );
+    } finally {
+      setConnectionsSaving(false);
+    }
+  }
+
+  async function handleTestConnections() {
+    try {
+      setConnectionsTesting(true);
+      const result = await testConnections(connections);
+      const enabled = Object.entries(result.checks)
+        .filter(([, ok]) => ok)
+        .map(([name]) => name.toUpperCase())
+        .join(", ");
+      setConnectionsMessage(
+        enabled ? `Validated: ${enabled}` : "No enabled services were validated."
+      );
+      window.setTimeout(() => setConnectionsMessage(""), 2500);
+    } catch (error) {
+      setConnectionsMessage(
+        error instanceof Error ? error.message : "Unable to test connections."
+      );
+    } finally {
+      setConnectionsTesting(false);
+    }
+  }
+
+  function updateConnectionField(
+    service: "plex" | "radarr" | "sonarr",
+    field: "enabled" | "url" | "token" | "apiKey",
+    value: string | boolean
+  ) {
+    setConnections((prev) => ({
+      ...prev,
+      [service]: {
+        ...(prev[service] ?? {
+          enabled: false,
+          url: "",
+          token: "",
+          apiKey: "",
+        }),
+        [field]: value,
+      },
+    }));
+  }
+
+  function renderConnectionSection(
+    service: "plex" | "radarr" | "sonarr",
+    title: string,
+    fields: Array<{ label: string; key: "url" | "token" | "apiKey"; type?: string }>
+  ) {
+    const current = connections[service] as
+      | (Record<string, string | boolean | undefined> & {
+          enabled?: boolean;
+        })
+      | undefined;
+
+    return (
+      <div className="settings-field" key={service}>
+        <label className="settings-field-label">{title}</label>
+        <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <input
+            type="checkbox"
+            checked={Boolean(current?.enabled)}
+            onChange={(e) =>
+              updateConnectionField(service, "enabled", e.target.checked)
+            }
+          />
+          Enable {title}
+        </label>
+        {fields.map((field) => (
+          <input
+            key={`${service}-${field.key}`}
+            type={field.type ?? "text"}
+            value={String(current?.[field.key] ?? "")}
+            onChange={(e) =>
+              updateConnectionField(service, field.key, e.target.value)
+            }
+            placeholder={field.label}
+            style={{ marginTop: 4 }}
+          />
+        ))}
+      </div>
+    );
+  }
+
   function renderZoneEditor(
     label: string,
     autoHint: string,
@@ -314,6 +418,51 @@ function SettingsPage() {
       </section>
 
       <section className="settings-grid">
+        <div className="settings-panel">
+          <h2 className="settings-panel-title">Media Connections</h2>
+          <p className="settings-subtitle" style={{ marginTop: -4, marginBottom: 12 }}>
+            Connect CineBoard to Plex, Radarr, and Sonarr so your display can reflect your media stack.
+          </p>
+
+          {renderConnectionSection("plex", "Plex", [
+            { label: "Plex URL", key: "url" },
+            { label: "Plex Token", key: "token", type: "password" },
+          ])}
+
+          {renderConnectionSection("radarr", "Radarr", [
+            { label: "Radarr URL", key: "url" },
+            { label: "Radarr API Key", key: "apiKey", type: "password" },
+          ])}
+
+          {renderConnectionSection("sonarr", "Sonarr", [
+            { label: "Sonarr URL", key: "url" },
+            { label: "Sonarr API Key", key: "apiKey", type: "password" },
+          ])}
+
+          <div className="settings-actions" style={{ marginTop: 10 }}>
+            <button
+              className="settings-button"
+              onClick={handleSaveConnections}
+              disabled={connectionsSaving}
+            >
+              {connectionsSaving ? "Saving..." : "Save Connections"}
+            </button>
+            <button
+              className="settings-button"
+              onClick={handleTestConnections}
+              disabled={connectionsTesting}
+            >
+              {connectionsTesting ? "Testing..." : "Test Connections"}
+            </button>
+          </div>
+
+          {connectionsMessage && (
+            <p className="settings-status" style={{ marginTop: 10 }}>
+              {connectionsMessage}
+            </p>
+          )}
+        </div>
+
         <div className="settings-panel">
           <h2 className="settings-panel-title">Display Source</h2>
 

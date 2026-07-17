@@ -25,6 +25,14 @@ router.get("/", (_req, res) => {
     process.env.PLEX_TOKEN && process.env.PLEX_BASE_URL
   );
 
+  const radarrConfigured = Boolean(
+    process.env.RADARR_API_KEY && process.env.RADARR_BASE_URL
+  );
+
+  const sonarrConfigured = Boolean(
+    process.env.SONARR_API_KEY && process.env.SONARR_BASE_URL
+  );
+
   let dbOk = false;
   try {
     // Quick query to confirm the DB is responsive
@@ -53,6 +61,14 @@ router.get("/", (_req, res) => {
       plex: {
         configured: plexConfigured,
         baseUrl: plexConfigured ? process.env.PLEX_BASE_URL : undefined,
+      },
+      radarr: {
+        configured: radarrConfigured,
+        baseUrl: radarrConfigured ? process.env.RADARR_BASE_URL : undefined,
+      },
+      sonarr: {
+        configured: sonarrConfigured,
+        baseUrl: sonarrConfigured ? process.env.SONARR_BASE_URL : undefined,
       },
       db: {
         ok: dbOk,

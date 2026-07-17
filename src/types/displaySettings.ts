@@ -171,6 +171,24 @@ export interface DisplayProfile {
   activeMovie: ActiveMovie | null;
 }
 
+export interface MediaConnectionConfig {
+  plex?: {
+    enabled: boolean;
+    url: string;
+    token: string;
+  };
+  radarr?: {
+    enabled: boolean;
+    url: string;
+    apiKey: string;
+  };
+  sonarr?: {
+    enabled: boolean;
+    url: string;
+    apiKey: string;
+  };
+}
+
 export const DEFAULT_DISPLAY_SETTINGS: DisplaySettings = {
   sourceMode: "genre",
   category: "popular",

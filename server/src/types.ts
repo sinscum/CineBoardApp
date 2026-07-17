@@ -280,6 +280,14 @@ export interface HealthResponse {
       configured: boolean;
       baseUrl?: string;
     };
+    radarr: {
+      configured: boolean;
+      baseUrl?: string;
+    };
+    sonarr: {
+      configured: boolean;
+      baseUrl?: string;
+    };
     db: {
       ok: boolean;
     };

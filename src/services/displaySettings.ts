@@ -6,6 +6,7 @@ import type {
   DisplaySourceMode,
   TMDBSortByKey,
   YearBucketKey,
+  MediaConnectionConfig,
 } from "../types/displaySettings";
 import {
   DEFAULT_DISPLAY_SETTINGS,
@@ -535,4 +536,19 @@ export function setActiveMovie(
   profile.activeMovie = movie;
   saveProfile(profile);
   window.dispatchEvent(new Event(ACTIVE_MOVIE_CHANGED_EVENT));
+}
+
+export function loadMediaConnections(): MediaConnectionConfig {
+  try {
+    const raw = localStorage.getItem("cineboard.media.connections");
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveMediaConnections(config: MediaConnectionConfig): void {
+  localStorage.setItem("cineboard.media.connections", JSON.stringify(config));
 }

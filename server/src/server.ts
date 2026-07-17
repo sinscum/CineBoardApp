@@ -58,6 +58,10 @@ app.use("/api/themes", themesRouter);
 import activityRouter from "./routes/activity.js";
 app.use("/api/activity", activityRouter);
 
+// File 10: media connections
+import connectionsRouter from "./routes/connections.js";
+app.use("/api/connections", connectionsRouter);
+
 // 404 for any unmatched API path
 app.use("/api", (_req, res) => {
   const body: ErrorResponse = { error: "not_found" };
