@@ -62,6 +62,10 @@ app.use("/api/activity", activityRouter);
 import connectionsRouter from "./routes/connections.js";
 app.use("/api/connections", connectionsRouter);
 
+// Plex integration (status, now-playing, image proxy)
+import plexRouter from "./routes/plex.js";
+app.use("/api/plex", plexRouter);
+
 // 404 for any unmatched API path
 app.use("/api", (_req, res) => {
   const body: ErrorResponse = { error: "not_found" };
