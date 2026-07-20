@@ -27,6 +27,7 @@ export interface PlexStatus {
   configured: boolean;
   reachable: boolean;
   serverName?: string;
+  url?: string;
   detail?: string;
 }
 
@@ -145,11 +146,13 @@ export async function getPlexStatus(): Promise<PlexStatus> {
       configured: true,
       reachable: true,
       serverName: mc?.friendlyName || mc?.machineIdentifier,
+      url: conn.url,
     };
   } catch (err) {
     return {
       configured: true,
       reachable: false,
+      url: conn.url,
       detail: err instanceof Error ? err.message : "request failed",
     };
   }

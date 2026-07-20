@@ -278,14 +278,18 @@ export interface HealthResponse {
     };
     plex: {
       configured: boolean;
+      reachable?: boolean;
+      serverName?: string;
       baseUrl?: string;
     };
     radarr: {
       configured: boolean;
+      reachable?: boolean;
       baseUrl?: string;
     };
     sonarr: {
       configured: boolean;
+      reachable?: boolean;
       baseUrl?: string;
     };
     db: {

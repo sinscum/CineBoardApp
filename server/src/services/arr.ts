@@ -13,7 +13,7 @@
 // =============================================================
 
 import { db } from "../db.js";
-import { joinUrl } from "./mediaProbe.js";
+import { joinUrl, probeArr } from "./mediaProbe.js";
 import type { ConnectionConfig } from "./connectionConfig.js";
 
 const DEFAULT_TIMEOUT_MS = 6000;
@@ -45,6 +45,13 @@ export interface ComingSoonResult {
   items: ComingSoonItem[];
 }
 
+export interface ArrStatus {
+  configured: boolean;
+  reachable: boolean;
+  url?: string;
+  detail?: string;
+}
+
 function readStoredConfig(): ConnectionConfig | null {
   try {
     const row = db
@@ -57,7 +64,7 @@ function readStoredConfig(): ConnectionConfig | null {
   }
 }
 
-function resolveConnection(
+export function resolveConnection(
   service: "radarr" | "sonarr"
 ): ArrConnection | null {
   const stored = readStoredConfig();
@@ -72,6 +79,19 @@ function resolveConnection(
   if (envUrl && envKey) return { url: envUrl, apiKey: envKey };
 
   return null;
+}
+
+/** Whether a Radarr/Sonarr instance is configured and reachable. */
+export async function getArrStatus(service: "radarr" | "sonarr"): Promise<ArrStatus> {
+  const conn = resolveConnection(service);
+  if (!conn) return { configured: false, reachable: false, detail: "not configured" };
+  const probe = await probeArr(conn.url, conn.apiKey);
+  return {
+    configured: true,
+    reachable: probe.reachable,
+    url: conn.url,
+    detail: probe.reachable ? undefined : probe.detail,
+  };
 }
 
 /** yyyy-mm-dd for `daysFromNow` (0 = today). */

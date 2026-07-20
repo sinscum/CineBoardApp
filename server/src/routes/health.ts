@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { db, getAppState } from "../db.js";
 import type { HealthResponse } from "../types.js";
+import { getPlexConnection, getPlexStatus } from "../services/plex.js";
+import { resolveConnection, getArrStatus } from "../services/arr.js";
 
 const router = Router();
 
@@ -10,41 +12,74 @@ const STARTED_AT = Date.now();
  * GET /api/health
  *
  * Returns a snapshot of service connectivity / configuration.
- * The Dashboard's status chips will poll this every ~30 seconds.
  *
- * NOTE: Phase A only checks *whether providers are configured*
- * (env vars present, DB reachable). Reachability checks (actually
- * pinging TMDB and Plex) happen in Phase D when we proxy those APIs.
+ * By default this performs *live reachability* probes against every
+ * configured media service (Plex/Radarr/Sonarr) in parallel, so the
+ * report reflects reality, not just whether credentials are present.
+ * Pass ?shallow=1 for a fast configured-only check that skips the
+ * network probes (useful for cheap liveness monitoring).
+ *
+ * "Configured" now means either the Settings UI saved a connection OR
+ * the matching env vars are set (the service resolvers check both).
  */
-router.get("/", (_req, res) => {
+router.get("/", async (req, res) => {
+  const shallow = req.query.shallow === "1" || req.query.shallow === "true";
+
   const tmdbConfigured = Boolean(
     process.env.TMDB_TOKEN || process.env.VITE_TMDB_READ_TOKEN
   );
 
-  const plexConfigured = Boolean(
-    process.env.PLEX_TOKEN && process.env.PLEX_BASE_URL
-  );
-
-  const radarrConfigured = Boolean(
-    process.env.RADARR_API_KEY && process.env.RADARR_BASE_URL
-  );
-
-  const sonarrConfigured = Boolean(
-    process.env.SONARR_API_KEY && process.env.SONARR_BASE_URL
-  );
-
   let dbOk = false;
   try {
-    // Quick query to confirm the DB is responsive
     const row = db.prepare("SELECT 1 as ok").get() as { ok: number } | undefined;
     dbOk = row?.ok === 1;
   } catch {
     dbOk = false;
   }
 
+  let plex: HealthResponse["services"]["plex"];
+  let radarr: HealthResponse["services"]["radarr"];
+  let sonarr: HealthResponse["services"]["sonarr"];
+
+  if (shallow) {
+    const plexConn = getPlexConnection();
+    const radarrConn = resolveConnection("radarr");
+    const sonarrConn = resolveConnection("sonarr");
+    plex = { configured: Boolean(plexConn), baseUrl: plexConn?.url };
+    radarr = { configured: Boolean(radarrConn), baseUrl: radarrConn?.url };
+    sonarr = { configured: Boolean(sonarrConn), baseUrl: sonarrConn?.url };
+  } else {
+    const [plexStatus, radarrStatus, sonarrStatus] = await Promise.all([
+      getPlexStatus(),
+      getArrStatus("radarr"),
+      getArrStatus("sonarr"),
+    ]);
+    plex = {
+      configured: plexStatus.configured,
+      reachable: plexStatus.configured ? plexStatus.reachable : undefined,
+      serverName: plexStatus.serverName,
+      baseUrl: plexStatus.url,
+    };
+    radarr = {
+      configured: radarrStatus.configured,
+      reachable: radarrStatus.configured ? radarrStatus.reachable : undefined,
+      baseUrl: radarrStatus.url,
+    };
+    sonarr = {
+      configured: sonarrStatus.configured,
+      reachable: sonarrStatus.configured ? sonarrStatus.reachable : undefined,
+      baseUrl: sonarrStatus.url,
+    };
+  }
+
+  // Overall: down if the DB is unavailable, degraded if TMDB (the core
+  // poster source) is not configured or a configured service is unreachable.
+  const anyUnreachable = [plex, radarr, sonarr].some(
+    (s) => s.configured && s.reachable === false
+  );
   const overall: HealthResponse["status"] = !dbOk
     ? "down"
-    : !tmdbConfigured
+    : !tmdbConfigured || anyUnreachable
     ? "degraded"
     : "ok";
 
@@ -55,24 +90,11 @@ router.get("/", (_req, res) => {
     uptimeSec,
     startedAt: STARTED_AT,
     services: {
-      tmdb: {
-        configured: tmdbConfigured,
-      },
-      plex: {
-        configured: plexConfigured,
-        baseUrl: plexConfigured ? process.env.PLEX_BASE_URL : undefined,
-      },
-      radarr: {
-        configured: radarrConfigured,
-        baseUrl: radarrConfigured ? process.env.RADARR_BASE_URL : undefined,
-      },
-      sonarr: {
-        configured: sonarrConfigured,
-        baseUrl: sonarrConfigured ? process.env.SONARR_BASE_URL : undefined,
-      },
-      db: {
-        ok: dbOk,
-      },
+      tmdb: { configured: tmdbConfigured },
+      plex,
+      radarr,
+      sonarr,
+      db: { ok: dbOk },
     },
   };
 
