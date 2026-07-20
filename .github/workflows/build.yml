@@ -1,0 +1,40 @@
+name: Build and push images
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build API
+        uses: docker/build-push-action@v5
+        with:
+          context: ./server
+          file: ./server/Dockerfile
+          push: true
+          tags: ghcr.io/sinscum/cineboard-api:latest
+
+      - name: Build web
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ghcr.io/sinscum/cineboard:latest
+          build-args: |
+            VITE_TMDB_READ_TOKEN=${{ secrets.VITE_TMDB_READ_TOKEN }}
+            VITE_API_BASE_URL=/api
