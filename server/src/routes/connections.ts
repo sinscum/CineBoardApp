@@ -5,6 +5,7 @@ import {
   validateConnectionConfig,
   type ConnectionConfig,
 } from "../services/connectionConfig.js";
+import { probePlex, probeArr, type ProbeResult } from "../services/mediaProbe.js";
 
 const router = Router();
 
@@ -67,15 +68,35 @@ router.post("/test", async (req, res) => {
   }
 
   const config = validation.normalized;
-  const checks = {
-    plex: Boolean(config.plex?.enabled && config.plex.url && config.plex.token),
-    radarr: Boolean(config.radarr?.enabled && config.radarr.url && config.radarr.apiKey),
-    sonarr: Boolean(config.sonarr?.enabled && config.sonarr.url && config.sonarr.apiKey),
-  };
 
+  // Only probe services that are enabled AND have credentials filled in.
+  // Everything else reports as not-configured (never "validated").
+  const plexReady = Boolean(config.plex?.enabled && config.plex.url && config.plex.token);
+  const radarrReady = Boolean(config.radarr?.enabled && config.radarr.url && config.radarr.apiKey);
+  const sonarrReady = Boolean(config.sonarr?.enabled && config.sonarr.url && config.sonarr.apiKey);
+
+  const notConfigured: ProbeResult = { reachable: false, detail: "not configured" };
+
+  const [plexResult, radarrResult, sonarrResult] = await Promise.all([
+    plexReady ? probePlex(config.plex!.url, config.plex!.token) : Promise.resolve(notConfigured),
+    radarrReady ? probeArr(config.radarr!.url, config.radarr!.apiKey) : Promise.resolve(notConfigured),
+    sonarrReady ? probeArr(config.sonarr!.url, config.sonarr!.apiKey) : Promise.resolve(notConfigured),
+  ]);
+
+  // `checks` stays boolean-shaped (reachable = validated) for the existing
+  // Settings UI; `details` carries the reason when a probe fails.
   res.json({
     ok: true,
-    checks,
+    checks: {
+      plex: plexResult.reachable,
+      radarr: radarrResult.reachable,
+      sonarr: sonarrResult.reachable,
+    },
+    details: {
+      plex: plexResult.detail,
+      radarr: radarrResult.detail,
+      sonarr: sonarrResult.detail,
+    },
   });
 });
 
