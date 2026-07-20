@@ -66,6 +66,11 @@ app.use("/api/connections", connectionsRouter);
 import plexRouter from "./routes/plex.js";
 app.use("/api/plex", plexRouter);
 
+// Radarr / Sonarr integration (coming soon)
+import { radarrRouter, sonarrRouter } from "./routes/arr.js";
+app.use("/api/radarr", radarrRouter);
+app.use("/api/sonarr", sonarrRouter);
+
 // 404 for any unmatched API path
 app.use("/api", (_req, res) => {
   const body: ErrorResponse = { error: "not_found" };
